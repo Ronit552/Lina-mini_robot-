@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINA // SYSTEM DIAGNOSTICS</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Roboto+Mono:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #0f0;
+            --text-main: #e0e0e0;
+            --alert-color: #ff003c;
+            --accent-color: #00f3ff;
+            --accent-dim: rgba(0, 243, 255, 0.2);
+            --panel-bg: rgba(0, 20, 0, 0.1);
+            --border-color: #0f0;
+            --header-border: rgba(0, 243, 255, 0.4);
+            --font-header: 'Orbitron', sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --glass-bg: rgba(0, 10, 10, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--text-color) var(--bg-color);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image:
+                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Header */
+        #top-header {
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--header-border);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+            position: relative;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            height: 40px;
+            width: auto;
+            filter: drop-shadow(0 0 8px var(--accent-color));
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+        }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #333;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .led.active {
+            background-color: #0f0;
+            box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+        }
+
+        .led.disconnected {
+            background-color: var(--alert-color);
+            box-shadow: 0 0 10px var(--alert-color), 0 0 20px var(--alert-color);
+        }
+
+        /* Glass Navbar */
+        .glass-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 8px 30px;
+            border-radius: 30px;
+            display: flex;
+            gap: 30px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1), 0 4px 20px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+        }
+
+        .nav-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            opacity: 1;
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .glass-nav {
+                display: none;
+            }
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            flex-grow: 1;
+            overflow: hidden;
+            padding: 0 20px 20px 20px;
+        }
+
+        .panel {
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+            padding: 15px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.05);
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--text-color);
+            border-left: 2px solid var(--text-color);
+        }
+
+        .panel::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--text-color);
+            border-right: 2px solid var(--text-color);
+        }
+
+        .panel-header {
+            font-family: var(--font-header);
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Panel A: Sensor Telemetry */
+        #panel-sensors {
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+        }
+
+        .chart-container {
+            flex-grow: 1;
+            position: relative;
+            height: 50%;
+            /* Split for two charts */
+            margin-bottom: 10px;
+        }
+
+        /* Panel B: Digital Twin */
+        #panel-twin {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        .scene {
+            width: 200px;
+            height: 200px;
+            perspective: 600px;
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-20deg) rotateY(-20deg);
+            transition: transform 0.1s linear;
+        }
+
+        .cube__face {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid var(--accent-color);
+            background: rgba(0, 243, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--font-header);
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1) inset;
+        }
+
+        .cube__face--front {
+            transform: rotateY(0deg) translateZ(100px);
+        }
+
+        .cube__face--right {
+            transform: rotateY(90deg) translateZ(100px);
+        }
+
+        .cube__face--back {
+            transform: rotateY(180deg) translateZ(100px);
+        }
+
+        .cube__face--left {
+            transform: rotateY(-90deg) translateZ(100px);
+        }
+
+        .cube__face--top {
+            transform: rotateX(90deg) translateZ(100px);
+        }
+
+        .cube__face--bottom {
+            transform: rotateX(-90deg) translateZ(100px);
+        }
+
+        .axis-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            color: var(--accent-color);
+        }
+
+        /* Panel C: System Console */
+        #panel-console {
+            grid-column: 1 / 3;
+            grid-row: 2 / 3;
+            background: #000;
+        }
+
+        .console-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+
+        .console-controls label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .console-output {
+            flex-grow: 1;
+            min-height: 0;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            padding: 5px;
+            border: 1px solid #333;
+            margin-bottom: 10px;
+        }
+
+        .log-line {
+            margin-bottom: 2px;
+            word-wrap: break-word;
+        }
+
+        .log-info {
+            color: var(--text-color);
+        }
+
+        .log-warn {
+            color: #ffae00;
+        }
+
+        .log-error {
+            color: var(--alert-color);
+        }
+
+        .timestamp {
+            color: #555;
+            margin-right: 10px;
+        }
+
+        .console-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .console-prompt {
+            color: var(--text-color);
+        }
+
+        #cmd-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            outline: none;
+        }
+
+        .btn-export {
+            background: transparent;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 2px 10px;
+            cursor: pointer;
+            font-family: var(--font-header);
+            font-size: 0.7rem;
+        }
+
+        .btn-export:hover {
+            background: var(--text-color);
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+            }
+
+            #panel-sensors,
+            #panel-twin,
+            #panel-console {
+                grid-column: 1 / 2;
+            }
+
+            #panel-sensors {
+                grid-row: 1 / 2;
+                height: 300px;
+            }
+
+            #panel-twin {
+                grid-row: 2 / 3;
+                height: 300px;
+            }
+
+            #panel-console {
+                grid-row: 3 / 4;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="top-header">
+        <img src="{{ url_for('static', filename='images/lina_logo.svg') }}" alt="LINA Logo" class="brand">
+
+        <nav class="glass-nav">
+            <a href="{{ url_for('cockpit') }}" class="nav-link">HOME</a>
+            <a href="{{ url_for('settings') }}" class="nav-link">SETTINGS</a>
+            <a href="#" class="nav-link active">LOG</a>
+            <a href="#" class="nav-link">ABOUT</a>
+        </nav>
+
+        <div class="status-bar">
+            <div class="indicator">
+                <div id="led-ws" class="led disconnected"></div>
+                <span>WS</span>
+            </div>
+            <div class="indicator">
+                <div id="led-esp" class="led disconnected"></div>
+                <span>ESP32</span>
+            </div>
+            <div class="indicator">
+                <span id="battery-val" style="color: var(--accent-color);">7.4V</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+
+        <!-- Panel A: Sensor Telemetry -->
+        <div class="panel" id="panel-sensors">
+            <div class="panel-header">
+                <span>SENSOR TELEMETRY</span>
+                <span>[LIVE]</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="imuChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="sonarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Panel B: Digital Twin -->
+        <div class="panel" id="panel-twin">
+            <div class="panel-header" style="position: absolute; top: 15px; left: 15px; width: calc(100% - 30px);">
+                <span>DIGITAL TWIN</span>
+                <span>IMU_SYNC</span>
+            </div>
+
+            <div class="scene">
+                <div class="cube" id="twin-cube">
+                    <div class="cube__face cube__face--front">FRONT</div>
+                    <div class="cube__face cube__face--back">BACK</div>
+                    <div class="cube__face cube__face--right">RIGHT</div>
+                    <div class="cube__face cube__face--left">LEFT</div>
+                    <div class="cube__face cube__face--top">TOP</div>
+                    <div class="cube__face cube__face--bottom">BTM</div>
+                </div>
+            </div>
+
+            <div class="axis-indicator">
+                P: <span id="pitch-val">0</span>° R: <span id="roll-val">0</span>° Y: <span id="yaw-val">0</span>°
+            </div>
+        </div>
+
+        <!-- Panel C: System Console -->
+        <div class="panel" id="panel-console">
+            <div class="panel-header">
+                <span>SYSTEM CONSOLE</span>
+                <button class="btn-export" onclick="exportLogs()">EXPORT LOGS</button>
+            </div>
+            <div class="console-controls">
+                <label><input type="checkbox" checked onchange="filterLogs('info')"> [INFO]</label>
+                <label><input type="checkbox" checked onchange="filterLogs('warn')"> [WARN]</label>
+                <label><input type="checkbox" checked onchange="filterLogs('error')"> [ERROR]</label>
+            </div>
+            <div class="console-output" id="console-out">
+                <!-- Logs will appear here -->
+            </div>
+            <div class="console-input-area">
+                <span class="console-prompt">></span>
+                <input type="text" id="cmd-input" placeholder="Enter command..." autocomplete="off">
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // --- Socket.IO Setup ---
+        const socket = io();
+
+        // --- Chart.js Setup ---
+        Chart.defaults.color = '#0f0';
+        Chart.defaults.borderColor = 'rgba(0, 255, 0, 0.2)';
+        Chart.defaults.font.family = "'Roboto Mono', monospace";
+
+        // IMU Chart
+        const ctxImu = document.getElementById('imuChart').getContext('2d');
+        const imuChart = new Chart(ctxImu, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [
+                    { label: 'Accel X', data: Array(20).fill(0), borderColor: '#ff003c', borderWidth: 1, tension: 0.4 },
+                    { label: 'Accel Y', data: Array(20).fill(0), borderColor: '#00f3ff', borderWidth: 1, tension: 0.4 },
+                    { label: 'Accel Z', data: Array(20).fill(0), borderColor: '#0f0', borderWidth: 1, tension: 0.4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { position: 'top', labels: { boxWidth: 10 } } },
+                scales: { y: { min: -2, max: 2 }, x: { display: false } }
+            }
+        });
+
+        // Sonar Chart
+        const ctxSonar = document.getElementById('sonarChart').getContext('2d');
+        const sonarChart = new Chart(ctxSonar, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [{ label: 'Sonar Dist (cm)', data: Array(20).fill(0), borderColor: '#00f3ff', backgroundColor: 'rgba(0, 243, 255, 0.1)', fill: true, borderWidth: 1, tension: 0.2 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { min: 0, max: 100 }, x: { display: false } }
+            }
+        });
+
+        // --- Socket.IO Event Handlers ---
+
+        socket.on('telemetry_update', function (data) {
+            // Update IMU Chart
+            imuChart.data.datasets[0].data.shift(); imuChart.data.datasets[0].data.push(data.imu.x);
+            imuChart.data.datasets[1].data.shift(); imuChart.data.datasets[1].data.push(data.imu.y);
+            imuChart.data.datasets[2].data.shift(); imuChart.data.datasets[2].data.push(data.imu.z);
+            imuChart.update();
+
+            // Update Sonar Chart
+            sonarChart.data.datasets[0].data.shift(); sonarChart.data.datasets[0].data.push(data.sonar);
+            sonarChart.update();
+
+            // Update Digital Twin
+            const cube = document.getElementById('twin-cube');
+            cube.style.transform = `rotateX(${data.imu.pitch}deg) rotateY(${data.imu.yaw}deg) rotateZ(${data.imu.roll}deg)`;
+
+            document.getElementById('pitch-val').innerText = Math.round(data.imu.pitch);
+            document.getElementById('roll-val').innerText = Math.round(data.imu.roll);
+            document.getElementById('yaw-val').innerText = Math.round(data.imu.yaw);
+
+            // Update Net Stats
+            document.getElementById('ping-val').innerText = data.network.ping + 'ms';
+            document.getElementById('signal-val').innerText = data.network.signal + 'dBm';
+            document.getElementById('signal-fill').style.width = (100 + data.network.signal) + '%';
+            document.getElementById('loss-val').innerText = data.network.loss + '%';
+        });
+
+        socket.on('log_message', function (data) {
+            addLog(data.type, data.msg);
+        });
+
+        // --- Log Logic ---
+        function addLog(type, msg) {
+            const consoleOut = document.getElementById('console-out');
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-GB');
+
+            const line = document.createElement('div');
+            line.className = `log-line log-${type}`;
+            line.innerHTML = `<span class="timestamp">[${timeStr}]</span> [${type.toUpperCase()}] ${msg}`;
+
+            consoleOut.appendChild(line);
+            consoleOut.scrollTop = consoleOut.scrollHeight;
+        }
+
+        // --- Controls ---
+        function filterLogs(type) {
+            const lines = document.querySelectorAll(`.log-${type}`);
+            lines.forEach(line => {
+                line.style.display = line.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+
+        function exportLogs() {
+            alert("Downloading system_logs_2025.txt...");
+        }
+
+        // Command Input
+        document.getElementById('cmd-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const cmd = this.value;
+                addLog('info', `> ${cmd}`);
+                if (cmd === 'clear') {
+                    document.getElementById('console-out').innerHTML = '';
+                } else if (cmd === 'help') {
+                    addLog('info', 'Available commands: clear, help, reboot, status');
+                } else {
+                    addLog('warn', `Command not recognized: ${cmd}`);
+                }
+                this.value = '';
+            }
+        });
+
+    </script>
+</body>
+
+</html>

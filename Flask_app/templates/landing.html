@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINA | Intelligent Navigation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --neon-cyan: #00f3ff;
+            --neon-cyan-dim: rgba(0, 243, 255, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --font-heading: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            min-height: 300vh;
+            background-image:
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 50px 50px;
+            }
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, #0a0a0a 90%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- Typography --- */
+        h1,
+        h2,
+        h3 {
+            font-family: var(--font-heading);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        /* --- Scrollytelling Elements --- */
+        .data-line-container {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .data-line-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .data-line-active {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+            transition: height 0.1s linear;
+        }
+
+        /* --- Sections --- */
+        section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            z-index: 1;
+        }
+
+        /* --- Hero Section --- */
+        #hero {
+            text-align: center;
+        }
+
+        .hero-status {
+            position: absolute;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            opacity: 0.7;
+        }
+
+        .status-tl {
+            top: 2rem;
+            left: 2rem;
+        }
+
+        .status-tr {
+            top: 2rem;
+            right: 2rem;
+        }
+
+        .status-bl {
+            bottom: 2rem;
+            left: 2rem;
+        }
+
+        .status-br {
+            bottom: 2rem;
+            right: 2rem;
+        }
+
+        .logo-container {
+            width: 300px;
+            height: 200px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        #lina-logo {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 5px var(--neon-cyan));
+        }
+
+        /* --- Core Systems Section --- */
+        #core-systems {
+            display: flex;
+            flex-direction: column;
+            gap: 4rem;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: linear-gradient(to bottom, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 243, 255, 0.1);
+            padding: 2rem;
+            width: 300px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .card:nth-child(2) {
+            transform: translateY(50px);
+            transition-delay: 0.2s;
+        }
+
+        .card:nth-child(3) {
+            transform: translateX(50px);
+            transition-delay: 0.4s;
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translate(0, 0);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--neon-cyan);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+            z-index: 2;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.05), transparent);
+            transform: rotate(45deg) translateY(-100%);
+            transition: transform 0.5s;
+            pointer-events: none;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover::after {
+            animation: scanCard 1.5s linear infinite;
+        }
+
+        @keyframes scanCard {
+            0% {
+                transform: rotate(45deg) translateY(-100%);
+            }
+
+            100% {
+                transform: rotate(45deg) translateY(100%);
+            }
+        }
+
+        .card h3 {
+            color: var(--neon-cyan);
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .card-status {
+            font-size: 0.8rem;
+            color: #0f0;
+            margin-bottom: 1rem;
+            display: block;
+            font-family: 'Courier New', monospace;
+        }
+
+        .card-specs {
+            list-style: none;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+        }
+
+        .card-specs li {
+            margin-bottom: 0.3rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-specs span {
+            color: var(--neon-cyan);
+        }
+
+        /* --- Neural Architecture Section --- */
+        #neural-architecture {}
+
+        .split-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+
+        .split-item {
+            width: 45%;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: all 1s ease-out;
+        }
+
+        .split-left {
+            justify-content: flex-end;
+            text-align: right;
+            transform: translateX(-100px);
+        }
+
+        .split-right {
+            justify-content: flex-start;
+            text-align: left;
+            transform: translateX(100px);
+        }
+
+        .split-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .neural-text h3 {
+            color: var(--neon-cyan);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .neural-data {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            display: inline-block;
+        }
+
+        .neural-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin: 0 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .neural-connector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 2px;
+            background: rgba(0, 243, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .neural-packet {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 100%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: dataFlow 2s linear infinite;
+        }
+
+        @keyframes dataFlow {
+            0% {
+                left: -20%;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                left: 120%;
+                opacity: 0;
+            }
+        }
+
+        /* --- System Telemetry Section --- */
+        .terminal-window {
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            width: 100%;
+            max-width: 800px;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.05);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.8s ease;
+        }
+
+        .terminal-window.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .terminal-header {
+            background: rgba(0, 243, 255, 0.1);
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .terminal-title {
+            color: var(--neon-cyan);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .terminal-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+        }
+
+        .dot-red {
+            background: #ff5f56;
+        }
+
+        .dot-yellow {
+            background: #ffbd2e;
+        }
+
+        .dot-green {
+            background: #27c93f;
+        }
+
+        .terminal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .terminal-sidebar {
+            width: 150px;
+            border-right: 1px solid rgba(0, 243, 255, 0.1);
+            padding: 1rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .net-stat {
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 1.5rem;
+            color: var(--neon-cyan);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: typeLine 0.1s forwards;
+        }
+
+        @keyframes typeLine {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* --- Initialize Section --- */
+        #initialize {
+            text-align: center;
+        }
+
+        .init-btn-container {
+            position: relative;
+            display: inline-block;
+            padding: 2px;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.8s ease;
+        }
+
+        .init-btn {
+            background: transparent;
+            color: var(--neon-cyan);
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 1.5rem 4rem;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+            letter-spacing: 4px;
+            transition: color 0.3s;
+        }
+
+        .init-btn:hover {
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .border-line {
+            position: absolute;
+            background: var(--neon-cyan);
+            transition: all 0.4s ease;
+        }
+
+        .border-top,
+        .border-bottom {
+            height: 2px;
+            width: 0;
+        }
+
+        .border-left,
+        .border-right {
+            width: 2px;
+            height: 0;
+        }
+
+        .border-top {
+            top: 0;
+            left: 0;
+        }
+
+        .border-right {
+            top: 0;
+            right: 0;
+            transition-delay: 0.1s;
+        }
+
+        .border-bottom {
+            bottom: 0;
+            right: 0;
+            transition-delay: 0.2s;
+        }
+
+        .border-left {
+            bottom: 0;
+            left: 0;
+            transition-delay: 0.3s;
+        }
+
+        .init-btn-container:hover .border-top,
+        .init-btn-container:hover .border-bottom {
+            width: 100%;
+        }
+
+        .init-btn-container:hover .border-left,
+        .init-btn-container:hover .border-right {
+            height: 100%;
+        }
+
+        .fade-in-up {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #050505;
+            border-left: 1px solid rgba(0, 243, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 0;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #fff;
+            box-shadow: 0 0 15px var(--neon-cyan);
+        }
+
+        /* --- Animations --- */
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 900;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1s ease-out 2.5s forwards;
+            text-shadow: 0 0 20px var(--neon-cyan-dim);
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-top: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 1s ease-out 3s forwards;
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Scrollytelling Data Line -->
+    <div class="data-line-container">
+        <div class="data-line-bg"></div>
+        <div class="data-line-active" id="scrollLine"></div>
+    </div>
+
+    <!-- Section 1: Hero -->
+    <section id="hero">
+        <div class="hero-status status-tl">SYS.VER: v1.0.4</div>
+        <div class="hero-status status-tr">STATUS: ONLINE</div>
+        <div class="hero-status status-bl">LOC: LOCALHOST</div>
+        <div class="hero-status status-br">SEC: ENCRYPTED</div>
+
+        <div class="logo-container">
+            <svg id="lina-logo" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                <g stroke="var(--neon-cyan)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"
+                    filter="url(#glow)">
+                    <!-- Main Eye Shape -->
+                    <path class="eye-frame" d="M 30 100 Q 150 10 270 100 Q 150 190 30 100 Z" stroke-width="4"
+                        stroke-dasharray="1000" stroke-dashoffset="1000"
+                        style="animation: drawLine 3s ease-out forwards;" />
+
+                    <!-- Inner Detail Triangle -->
+                    <path class="eye-detail" d="M 60 100 L 90 80 L 90 120 Z" opacity="0.7" stroke-dasharray="1000"
+                        stroke-dashoffset="1000" style="animation: drawLine 2s ease-out 1s forwards;" />
+
+                    <!-- Iris Assembly -->
+                    <g class="iris" transform="translate(150, 100)">
+                        <!-- Outer segmented ring -->
+                        <path d="M -45 -15 A 50 50 0 0 1 45 -15" stroke-dasharray="10 5" opacity="0"
+                            style="animation: fadeUp 1s ease-out 2s forwards;" />
+                        <path d="M 45 15 A 50 50 0 0 1 -45 15" stroke-dasharray="10 5" opacity="0"
+                            style="animation: fadeUp 1s ease-out 2s forwards;" />
+
+                        <!-- Middle Tech Ring -->
+                        <circle r="35" stroke-width="2" opacity="0"
+                            style="animation: fadeUp 1s ease-out 2.2s forwards;" />
+                        <path d="M -35 0 L -25 0 M 25 0 L 35 0 M 0 -35 L 0 -25 M 0 25 L 0 35" stroke-width="2"
+                            opacity="0" style="animation: fadeUp 1s ease-out 2.4s forwards;" />
+
+                        <!-- Pupil -->
+                        <circle r="15" fill="var(--neon-cyan)" fill-opacity="0.2" stroke-width="0" opacity="0"
+                            style="animation: fadeUp 1s ease-out 2.6s forwards;" />
+                        <circle r="15" stroke-width="2" opacity="0"
+                            style="animation: fadeUp 1s ease-out 2.6s forwards;" />
+                        <circle cx="5" cy="-5" r="3" fill="#fff" stroke="none" opacity="0"
+                            style="animation: fadeUp 1s ease-out 2.8s forwards;" />
+                    </g>
+
+                    <!-- Circuit Connections (Right Side) -->
+                    <g class="circuits" transform="translate(150, 100)">
+                        <!-- Top Line -->
+                        <path d="M 50 -20 L 80 -20 L 100 -40" stroke-dasharray="100" stroke-dashoffset="100"
+                            style="animation: drawLine 1s ease-out 3s forwards;" />
+                        <circle cx="100" cy="-40" r="4" fill="var(--neon-cyan)" stroke="none" opacity="0"
+                            style="animation: fadeUp 0.5s ease-out 4s forwards;" />
+
+                        <!-- Middle Line -->
+                        <path d="M 55 0 L 110 0" stroke-dasharray="100" stroke-dashoffset="100"
+                            style="animation: drawLine 1s ease-out 3.2s forwards;" />
+                        <circle cx="110" cy="0" r="4" fill="var(--neon-cyan)" stroke="none" opacity="0"
+                            style="animation: fadeUp 0.5s ease-out 4.2s forwards;" />
+
+                        <!-- Bottom Line -->
+                        <path d="M 50 20 L 80 20 L 100 40" stroke-dasharray="100" stroke-dashoffset="100"
+                            style="animation: drawLine 1s ease-out 3.4s forwards;" />
+                        <circle cx="100" cy="40" r="4" fill="var(--neon-cyan)" stroke="none" opacity="0"
+                            style="animation: fadeUp 0.5s ease-out 4.4s forwards;" />
+                    </g>
+                </g>
+            </svg>
+        </div>
+        <h1 class="hero-title">LINA</h1>
+        <p class="hero-subtitle">Lightweight Intelligent Navigation Agent</p>
+    </section>
+
+    <!-- Section 2: Core Systems -->
+    <section id="core-systems">
+        <h2 class="section-title">Core Systems</h2>
+        <div class="cards-container">
+            <div class="card">
+                <h3>Vision</h3>
+                <span class="card-status">STATUS: ACTIVE</span>
+                <p>Advanced computer vision algorithms capable of real-time object detection and environmental mapping.
+                </p>
+                <ul class="card-specs">
+                    <li>Res: <span>4K/60fps</span></li>
+                    <li>Depth: <span>LiDAR</span></li>
+                    <li>Latency: <span>&lt;10ms</span></li>
+                    <li>FOV: <span>150°</span></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Motor</h3>
+                <span class="card-status">STATUS: NOMINAL</span>
+                <p>Precision motion control systems designed for high-speed traversal and complex obstacle negotiation.
+                </p>
+                <ul class="card-specs">
+                    <li>Torque: <span>50Nm</span></li>
+                    <li>Speed: <span>2.5m/s</span></li>
+                    <li>Drive: <span>4WD</span></li>
+                    <li>Payload: <span>12kg</span></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>AI Core</h3>
+                <span class="card-status">STATUS: LEARNING</span>
+                <p>Neural network architecture enabling adaptive learning and autonomous decision-making protocols.</p>
+                <ul class="card-specs">
+                    <li>Model: <span>CNN-v4</span></li>
+                    <li>Ops: <span>12 TOPS</span></li>
+                    <li>Mem: <span>16GB</span></li>
+                    <li>Power: <span>15W</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Neural Architecture -->
+    <section id="neural-architecture">
+        <h2 class="section-title">Neural Architecture</h2>
+        <div class="split-container">
+            <div class="split-item split-left">
+                <div class="neural-text">
+                    <h3>CORTEX</h3>
+                    <p>ESP32-CAM / Vision Processing</p>
+                    <div class="neural-data">
+                        FREQ: 240MHz<br>
+                        CORES: 2<br>
+                        SRAM: 520KB
+                    </div>
+                </div>
+                <div class="neural-icon">👁️</div>
+            </div>
+            <div class="neural-connector">
+                <div class="neural-packet"></div>
+            </div>
+            <div class="split-item split-right">
+                <div class="neural-icon">⚡</div>
+                <div class="neural-text">
+                    <h3>SPINE</h3>
+                    <p>Arduino Nano / Motor Control</p>
+                    <div class="neural-data">
+                        INPUT: 5V<br>
+                        PWM: 6 CH<br>
+                        LOGIC: 5V
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: System Telemetry -->
+    <section id="telemetry">
+        <h2 class="section-title">System Telemetry</h2>
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="terminal-controls">
+                    <div class="control-dot dot-red"></div>
+                    <div class="control-dot dot-yellow"></div>
+                    <div class="control-dot dot-green"></div>
+                </div>
+                <div class="terminal-title">USER@LINA-CORE:~</div>
+                <div style="width: 40px;"></div>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-sidebar">
+                    <div class="net-stat">NET: <span>ACTIVE</span></div>
+                    <div class="net-stat">UP: <span>450KB/s</span></div>
+                    <div class="net-stat">DOWN: <span>1.2MB/s</span></div>
+                    <div class="net-stat">PING: <span>12ms</span></div>
+                    <br>
+                    <div class="net-stat">CPU: <span>34%</span></div>
+                    <div class="net-stat">RAM: <span>512MB</span></div>
+                </div>
+                <div class="terminal-content" id="terminal-output">
+                    <!-- JS will populate this -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Initialize -->
+    <section id="initialize">
+        <div class="init-btn-container">
+            <span class="border-line border-top"></span>
+            <span class="border-line border-right"></span>
+            <span class="border-line border-bottom"></span>
+            <span class="border-line border-left"></span>
+            <button class="init-btn" onclick="alert('System Initialized. Welcome to LINA.')">INITIALIZE SYSTEM</button>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Scrollytelling Line Logic ---
+            const scrollLine = document.getElementById('scrollLine');
+
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.body.scrollHeight - window.innerHeight;
+                const scrollPercent = (scrollTop / docHeight) * 100;
+                const height = Math.min(scrollPercent, 100);
+                scrollLine.style.height = `${height}%`;
+            });
+
+            // --- Intersection Observer for Animations ---
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.2
+            };
+
+            // Telemetry Logic
+            const terminalOutput = document.getElementById('terminal-output');
+            const netStatSpans = document.querySelectorAll('.net-stat span');
+
+            const bootLogs = [
+                "> MOUNTING SENSORS... OK",
+                "> CALIBRATING GYRO... OK",
+                "> ESTABLISHING SERIAL LINK... OK",
+                "> CHECKING MOTOR DRIVERS... OK",
+                "> LOADING NEURAL WEIGHTS... 100%",
+                "> SYSTEM READY."
+            ];
+
+            const runtimeLogs = [
+                "> PACKET_LOSS: 0.001%",
+                "> RECALIBRATING VISION...",
+                "> OBSTACLE DETECTED: ID_402",
+                "> PATH OPTIMIZED: DELTA 0.4s",
+                "> MEMORY GC: FREED 4MB",
+                "> HEARTBEAT: ALIVE",
+                "> SYNCING TELEMETRY...",
+                "> MOTOR TEMP: 45C - NOMINAL"
+            ];
+
+            const addLog = (text) => {
+                const p = document.createElement('div');
+                p.className = 'log-entry';
+                p.textContent = `${new Date().toLocaleTimeString()} ${text}`;
+                terminalOutput.appendChild(p);
+                if (terminalOutput.children.length > 10) {
+                    terminalOutput.removeChild(terminalOutput.firstChild);
+                }
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            };
+
+            let telemetryInterval;
+
+            const runTelemetry = () => {
+                if (telemetryInterval) return;
+
+                // Initial Boot Sequence
+                let delay = 0;
+                bootLogs.forEach((log, index) => {
+                    setTimeout(() => addLog(log), delay);
+                    delay += 500;
+                });
+
+                // Continuous Runtime Logs
+                setTimeout(() => {
+                    telemetryInterval = setInterval(() => {
+                        const randomLog = runtimeLogs[Math.floor(Math.random() * runtimeLogs.length)];
+                        addLog(randomLog);
+
+                        // Randomize Stats
+                        if (netStatSpans.length >= 5) {
+                            netStatSpans[1].textContent = `${(Math.random() * 500 + 100).toFixed(0)}KB/s`; // UP
+                            netStatSpans[2].textContent = `${(Math.random() * 2 + 0.5).toFixed(1)}MB/s`; // DOWN
+                            netStatSpans[3].textContent = `${(Math.random() * 20 + 5).toFixed(0)}ms`; // PING
+                            netStatSpans[4].textContent = `${(Math.random() * 20 + 20).toFixed(0)}%`; // CPU
+                        }
+                    }, 2000);
+                }, delay + 1000);
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (entry.target.classList.contains('section-title')) {
+                            entry.target.classList.add('fade-in-up');
+                        }
+                        if (entry.target.classList.contains('card')) {
+                            entry.target.classList.add('visible');
+                        }
+                        if (entry.target.classList.contains('split-item')) {
+                            entry.target.classList.add('visible');
+                        }
+                        if (entry.target.classList.contains('terminal-window')) {
+                            entry.target.classList.add('visible');
+                            runTelemetry();
+                        }
+                        if (entry.target.classList.contains('init-btn-container')) {
+                            entry.target.classList.add('fade-in-up');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            const sectionTitle = document.querySelectorAll('.section-title');
+            sectionTitle.forEach(title => observer.observe(title));
+
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => observer.observe(card));
+
+            const splitItems = document.querySelectorAll('.split-item');
+            splitItems.forEach(item => observer.observe(item));
+
+            const terminal = document.querySelector('.terminal-window');
+            if (terminal) observer.observe(terminal);
+
+            const initBtn = document.querySelector('.init-btn-container');
+            if (initBtn) observer.observe(initBtn);
+        });
+    </script>
+</body>
+
+</html>

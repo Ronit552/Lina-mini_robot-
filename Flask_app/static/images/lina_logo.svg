@@ -1,0 +1,149 @@
+<svg id="lina-logo" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+        }
+        
+        .eye-frame {
+            fill: none;
+            stroke: #00f3ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 3s ease-out forwards;
+            filter: drop-shadow(0 0 2px #00f3ff);
+        }
+
+        .eye-detail {
+            fill: none;
+            stroke: #00f3ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            opacity: 0.7;
+            animation: drawLine 2s ease-out 1s forwards;
+        }
+
+        .iris-ring-outer {
+            fill: none;
+            stroke: #00f3ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 10 5;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2s forwards;
+        }
+
+        .iris-ring-inner {
+            fill: none;
+            stroke: #00f3ff;
+            stroke-width: 2;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2.2s forwards;
+        }
+
+        .iris-ticks {
+            stroke: #00f3ff;
+            stroke-width: 2;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2.4s forwards;
+        }
+
+        .pupil-glow {
+            fill: #00f3ff;
+            fill-opacity: 0.2;
+            stroke: none;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2.6s forwards;
+        }
+
+        .pupil-solid {
+            fill: none;
+            stroke: #00f3ff;
+            stroke-width: 2;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2.6s forwards;
+        }
+
+        .pupil-highlight {
+            fill: #fff;
+            stroke: none;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 2.8s forwards;
+        }
+
+        .circuit-line {
+            fill: none;
+            stroke: #00f3ff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+        }
+
+        .circuit-dot {
+            fill: #00f3ff;
+            stroke: none;
+            opacity: 0;
+        }
+
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <defs>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+    </defs>
+    
+    <g filter="url(#glow)">
+        <!-- Main Eye Shape -->
+        <path class="eye-frame" d="M 30 100 Q 150 10 270 100 Q 150 190 30 100 Z" stroke-width="4" />
+        
+        <!-- Inner Detail Triangle -->
+        <path class="eye-detail" d="M 60 100 L 90 80 L 90 120 Z" />
+        
+        <!-- Iris Assembly -->
+        <g class="iris" transform="translate(150, 100)">
+            <!-- Outer segmented ring -->
+            <path class="iris-ring-outer" d="M -45 -15 A 50 50 0 0 1 45 -15" />
+            <path class="iris-ring-outer" d="M 45 15 A 50 50 0 0 1 -45 15" />
+            
+            <!-- Middle Tech Ring -->
+            <circle class="iris-ring-inner" r="35" />
+            <path class="iris-ticks" d="M -35 0 L -25 0 M 25 0 L 35 0 M 0 -35 L 0 -25 M 0 25 L 0 35" />
+            
+            <!-- Pupil -->
+            <circle class="pupil-glow" r="15" />
+            <circle class="pupil-solid" r="15" />
+            <circle class="pupil-highlight" cx="5" cy="-5" r="3" />
+        </g>
+        
+        <!-- Circuit Connections (Right Side) -->
+        <g class="circuits" transform="translate(150, 100)">
+            <!-- Top Line -->
+            <path class="circuit-line" d="M 50 -20 L 80 -20 L 100 -40" style="animation: drawLine 1s ease-out 3s forwards;" />
+            <circle class="circuit-dot" cx="100" cy="-40" r="4" style="animation: fadeUp 0.5s ease-out 4s forwards;" />
+            
+            <!-- Middle Line -->
+            <path class="circuit-line" d="M 55 0 L 110 0" style="animation: drawLine 1s ease-out 3.2s forwards;" />
+            <circle class="circuit-dot" cx="110" cy="0" r="4" style="animation: fadeUp 0.5s ease-out 4.2s forwards;" />
+            
+            <!-- Bottom Line -->
+            <path class="circuit-line" d="M 50 20 L 80 20 L 100 40" style="animation: drawLine 1s ease-out 3.4s forwards;" />
+            <circle class="circuit-dot" cx="100" cy="40" r="4" style="animation: fadeUp 0.5s ease-out 4.4s forwards;" />
+        </g>
+    </g>
+</svg>

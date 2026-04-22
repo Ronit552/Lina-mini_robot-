@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINA // SYSTEM CONFIGURATION</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: #111111;
+            --text-color: #e0e0e0;
+            --text-main: #e0e0e0;
+            --accent-color: #00f3ff;
+            --accent-dim: rgba(0, 243, 255, 0.2);
+            --danger-color: #ff2a2a;
+            --alert-color: #ff003c;
+            --border-color: rgba(0, 243, 255, 0.4);
+            --glass-bg: rgba(0, 10, 10, 0.6);
+            --font-header: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) var(--panel-bg);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 0;
+            /* Removed padding to allow header to span full width */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        #top-header {
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+            position: relative;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+            /* Prevent header from shrinking */
+        }
+
+        .brand {
+            height: 40px;
+            width: auto;
+            filter: drop-shadow(0 0 8px var(--accent-color));
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+        }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #333;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .led.active {
+            background-color: #0f0;
+            box-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+        }
+
+        .led.disconnected {
+            background-color: var(--alert-color);
+            box-shadow: 0 0 10px var(--alert-color), 0 0 20px var(--alert-color);
+        }
+
+        /* Glass Navbar */
+        .glass-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 8px 30px;
+            border-radius: 30px;
+            display: flex;
+            gap: 30px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1), 0 4px 20px rgba(0, 0, 0, 0.6);
+            z-index: 20;
+        }
+
+        .nav-link {
+            color: var(--text-main);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            opacity: 1;
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .glass-nav {
+                display: none;
+            }
+        }
+
+        /* Grid Layout */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 20px;
+            /* Added padding here since body padding was removed */
+            padding-right: 5px;
+        }
+
+        /* Module Cards */
+        .module-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+            transition: border-color 0.3s ease;
+        }
+
+        .module-card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid var(--accent-color);
+            border-left: 2px solid var(--accent-color);
+        }
+
+        .module-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-bottom: 2px solid var(--accent-color);
+            border-right: 2px solid var(--accent-color);
+        }
+
+        .module-header {
+            font-family: var(--font-header);
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .module-id {
+            color: var(--accent-color);
+            margin-right: 10px;
+            font-weight: 900;
+        }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .value-display {
+            color: var(--accent-color);
+            font-family: var(--font-header);
+        }
+
+        /* Custom Slider (Audio Fader Style) */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #222;
+            border: 1px solid #444;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 10px;
+            border: 1px solid var(--accent-color);
+            background: #000;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+
+        input[type=range]:focus::-webkit-slider-runnable-track {
+            background: #333;
+        }
+
+        /* Firefox styles for range */
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #222;
+            border: 1px solid #444;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 10px;
+            border: 1px solid var(--accent-color);
+            background: #000;
+            cursor: pointer;
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+
+        /* Toggle Switch (Rocker/Neon Checkbox) */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #222;
+            border: 1px solid #444;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #555;
+            transition: .4s;
+            border: 1px solid #000;
+        }
+
+        input:checked+.slider {
+            background-color: rgba(0, 243, 255, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+            background-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        /* Rectangular slider for rocker look */
+        .slider.round {
+            /* Remove border-radius for industrial look */
+        }
+
+        /* Dropdown */
+        select {
+            width: 100%;
+            background-color: #000;
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Footer Actions */
+        .footer-actions {
+            margin-top: 20px;
+            padding: 20px;
+            /* Added padding */
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            background: var(--bg-color);
+            /* Ensure background covers content if sticky */
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 25px;
+            font-family: var(--font-header);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: var(--accent-color);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+
+        .btn-danger {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-color);
+            color: #fff;
+            box-shadow: 0 0 15px var(--danger-color);
+        }
+
+        /* Keybinds Display */
+        .keybind-list {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .key-cap {
+            border: 1px solid var(--accent-color);
+            padding: 5px 10px;
+            font-family: var(--font-header);
+            color: var(--accent-color);
+            min-width: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header id="top-header">
+        <img src="{{ url_for('static', filename='images/lina_logo.svg') }}" alt="LINA Logo" class="brand">
+
+        <nav class="glass-nav">
+            <a href="{{ url_for('cockpit') }}" class="nav-link">HOME</a>
+            <a href="{{ url_for('settings') }}" class="nav-link active">SETTINGS</a>
+            <a href="#" class="nav-link">LOG</a>
+            <a href="#" class="nav-link">ABOUT</a>
+        </nav>
+
+        <div class="status-bar">
+            <div class="indicator">
+                <div id="led-ws" class="led disconnected"></div>
+                <span>WS</span>
+            </div>
+            <div class="indicator">
+                <div id="led-esp" class="led disconnected"></div>
+                <span>ESP32</span>
+            </div>
+            <div class="indicator">
+                <span id="battery-val" style="color: var(--accent-color);">7.4V</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid-container">
+
+        <!-- MODULE A: PROPULSION DYNAMICS -->
+        <div class="module-card">
+            <div class="module-header"><span class="module-id">MOD_A</span> PROPULSION DYNAMICS</div>
+
+            <div class="control-group">
+                <div class="control-label">Master Velocity <span id="val-velocity" class="value-display">50%</span>
+                </div>
+                <input type="range" id="velocity" min="0" max="100" value="50"
+                    oninput="updateDisplay('velocity', this.value, '%')">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Steering Trim <span id="val-trim" class="value-display">0</span></div>
+                <input type="range" id="trim" min="-10" max="10" value="0"
+                    oninput="updateDisplay('trim', this.value, '')">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Turn Sensitivity <span id="val-sensitivity" class="value-display">MED</span>
+                </div>
+                <input type="range" id="sensitivity" min="1" max="3" value="2"
+                    oninput="updateSensitivityDisplay(this.value)">
+            </div>
+
+            <div class="control-group toggle-container">
+                <div class="control-label" style="margin-bottom:0">Invert Motors</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="invert-motors">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- MODULE B: PERCEPTION & ACTUATION -->
+        <div class="module-card">
+            <div class="module-header"><span class="module-id">MOD_B</span> PERCEPTION & ACTUATION</div>
+
+            <div class="control-group">
+                <div class="control-label">Head Pan Offset <span id="val-pan" class="value-display">0°</span></div>
+                <input type="range" id="pan-offset" min="-15" max="15" value="0"
+                    oninput="updateDisplay('pan', this.value, '°')">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Scan Velocity <span id="val-scan" class="value-display">50%</span></div>
+                <input type="range" id="scan-velocity" min="1" max="100" value="50"
+                    oninput="updateDisplay('scan', this.value, '%')">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Stream Quality</div>
+                <select id="stream-quality">
+                    <option value="high">High Latency (HD)</option>
+                    <option value="low">Low Latency (SD)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- MODULE C: AI & VISION PARAMETERS -->
+        <div class="module-card">
+            <div class="module-header"><span class="module-id">MOD_C</span> AI & VISION PARAMETERS</div>
+
+            <div class="control-group">
+                <div class="control-label">Hue <span id="val-hue" class="value-display">180</span></div>
+                <input type="range" id="hue" min="0" max="360" value="180"
+                    oninput="updateDisplay('hue', this.value, '')">
+            </div>
+            <div class="control-group">
+                <div class="control-label">Saturation <span id="val-sat" class="value-display">100%</span></div>
+                <input type="range" id="saturation" min="0" max="100" value="100"
+                    oninput="updateDisplay('sat', this.value, '%')">
+            </div>
+            <div class="control-group">
+                <div class="control-label">Value <span id="val-val" class="value-display">100%</span></div>
+                <input type="range" id="value" min="0" max="100" value="100"
+                    oninput="updateDisplay('val', this.value, '%')">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Confidence Threshold <span id="val-conf" class="value-display">0.8</span>
+                </div>
+                <input type="range" id="confidence" min="0" max="1" step="0.1" value="0.8"
+                    oninput="updateDisplay('conf', this.value, '')">
+            </div>
+
+            <div class="control-group toggle-container">
+                <div class="control-label" style="margin-bottom:0">Face ID Security</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="face-id">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- MODULE D: SAFETY & POWER -->
+        <div class="module-card">
+            <div class="module-header"><span class="module-id">MOD_D</span> SAFETY & POWER</div>
+
+            <div class="control-group">
+                <div class="control-label">Proximity Halt <span id="val-prox" class="value-display">30cm</span></div>
+                <input type="range" id="proximity" min="10" max="50" value="30"
+                    oninput="updateDisplay('prox', this.value, 'cm')">
+            </div>
+
+            <div class="control-group toggle-container">
+                <div class="control-label" style="margin-bottom:0">Crash Override</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="crash-override">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Low Voltage Warning <span id="val-volt" class="value-display">6.8V</span>
+                </div>
+                <input type="range" id="voltage" min="6.0" max="7.4" step="0.1" value="6.8"
+                    oninput="updateDisplay('volt', this.value, 'V')">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Eco-Sleep Timer</div>
+                <select id="eco-sleep">
+                    <option value="1">1 Minute</option>
+                    <option value="5">5 Minutes</option>
+                    <option value="never">Never</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- MODULE E: INPUT & CONTROL -->
+        <div class="module-card">
+            <div class="module-header"><span class="module-id">MOD_E</span> INPUT & CONTROL</div>
+
+            <div class="control-group">
+                <div class="control-label">Joystick Deadzone <span id="val-deadzone" class="value-display">5%</span>
+                </div>
+                <input type="range" id="deadzone" min="0" max="20" value="5"
+                    oninput="updateDisplay('deadzone', this.value, '%')">
+            </div>
+
+            <div class="control-group toggle-container">
+                <div class="control-label" style="margin-bottom:0">Rumble Feedback</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="rumble" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Control Scheme</div>
+                <div class="keybind-list">
+                    <div class="key-cap">W</div>
+                    <div class="key-cap">A</div>
+                    <div class="key-cap">S</div>
+                    <div class="key-cap">D</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer-actions">
+        <button class="btn btn-danger" onclick="console.log('FACTORY RESET INITIATED')">FACTORY RESET</button>
+        <button class="btn" onclick="console.log('REBOOT CORE INITIATED')">REBOOT CORE</button>
+        <button class="btn" onclick="saveConfig()">UPLOAD CONFIGURATION</button>
+    </div>
+
+    <script>
+        function updateDisplay(idSuffix, value, unit) {
+            document.getElementById('val-' + idSuffix).innerText = value + unit;
+        }
+
+        function updateSensitivityDisplay(value) {
+            const labels = { 1: 'LOW', 2: 'MED', 3: 'HIGH' };
+            document.getElementById('val-sensitivity').innerText = labels[value];
+        }
+
+        function saveConfig() {
+            const config = {
+                propulsion: {
+                    velocity: document.getElementById('velocity').value,
+                    trim: document.getElementById('trim').value,
+                    sensitivity: document.getElementById('sensitivity').value,
+                    invertMotors: document.getElementById('invert-motors').checked
+                },
+                perception: {
+                    panOffset: document.getElementById('pan-offset').value,
+                    scanVelocity: document.getElementById('scan-velocity').value,
+                    streamQuality: document.getElementById('stream-quality').value
+                },
+                vision: {
+                    hsv: {
+                        hue: document.getElementById('hue').value,
+                        saturation: document.getElementById('saturation').value,
+                        value: document.getElementById('value').value
+                    },
+                    confidence: document.getElementById('confidence').value,
+                    faceId: document.getElementById('face-id').checked
+                },
+                safety: {
+                    proximityHalt: document.getElementById('proximity').value,
+                    crashOverride: document.getElementById('crash-override').checked,
+                    lowVoltage: document.getElementById('voltage').value,
+                    ecoSleep: document.getElementById('eco-sleep').value
+                },
+                input: {
+                    deadzone: document.getElementById('deadzone').value,
+                    rumble: document.getElementById('rumble').checked
+                }
+            };
+
+            console.log("--- UPLOADING CONFIGURATION ---");
+            console.log(JSON.stringify(config, null, 2));
+            alert("Configuration Uploaded to Console");
+        }
+    </script>
+</body>
+
+</html>
