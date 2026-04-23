@@ -4,26 +4,23 @@
 #define PWMB 6
 #define BIN1 7
 #define BIN2 8
-
 void forward() {
   digitalWrite(AIN1, LOW);  digitalWrite(AIN2, HIGH); analogWrite(PWMA, 180);
-  digitalWrite(BIN1, LOW); digitalWrite(BIN2, HIGH);  analogWrite(PWMB, 180);
+  digitalWrite(BIN1, HIGH); digitalWrite(BIN2, LOW);  analogWrite(PWMB, 180);
 }
-
-void backward() {
-  digitalWrite(AIN1, HIGH); digitalWrite(AIN2, LOW); analogWrite(PWMA, 180);
-  digitalWrite(BIN1, HIGH); digitalWrite(BIN2, LOW); analogWrite(PWMB, 180);
-}
-
+// void backward() {
+//   digitalWrite(AIN1, HIGH); digitalWrite(AIN2, LOW);  analogWrite(PWMA, 180); // A flipped
+//   digitalWrite(BIN1, HIGH); digitalWrite(BIN2, LOW);  analogWrite(PWMB, 180);
+// }
 
 void turnLeft() {
-  digitalWrite(AIN1, HIGH); digitalWrite(AIN2, LOW);  analogWrite(PWMA, 150);
-  digitalWrite(BIN1, LOW);  digitalWrite(BIN2, HIGH); analogWrite(PWMB, 150);
+  digitalWrite(AIN1, HIGH); digitalWrite(AIN2, LOW);  analogWrite(PWMA, 150); // A flipped
+  digitalWrite(BIN1, HIGH); digitalWrite(BIN2, LOW);  analogWrite(PWMB, 150);
 }
 
 void turnRight() {
-  digitalWrite(AIN1, LOW);  digitalWrite(AIN2, HIGH); analogWrite(PWMA, 150);
-  digitalWrite(BIN1, HIGH); digitalWrite(BIN2, LOW);  analogWrite(PWMB, 150);
+  digitalWrite(AIN1, LOW);  digitalWrite(AIN2, HIGH); analogWrite(PWMA, 150); // A flipped
+  digitalWrite(BIN1, LOW);  digitalWrite(BIN2, HIGH); analogWrite(PWMB, 150);
 }
 
 void stopMotors() {
@@ -44,7 +41,7 @@ void loop() {
     cmd.trim();
 
     if      (cmd == "F") forward();
-    else if (cmd == "B") backward();
+//    else if (cmd == "B") backward();
     else if (cmd == "L") turnLeft();
     else if (cmd == "R") turnRight();
     else if (cmd == "S") stopMotors();

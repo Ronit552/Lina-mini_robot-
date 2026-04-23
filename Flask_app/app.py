@@ -63,6 +63,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev_key")
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+#________________________________
+from dotenv import load_dotenv
+load_dotenv()
+
 # ─────────────────────────────────────────────
 #  GLOBAL ROBOT STATE
 #  This dictionary holds the latest known state
