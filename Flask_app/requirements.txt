@@ -1,2 +1,12 @@
 Flask
 flask-socketio
+python-dotenv
+groq
+tavily-python
+ddgs
+sounddevice
+soundfile
+numpy
+scipy
+edge-tts
+pygame
